@@ -95,7 +95,7 @@ def pdf_to_images(pdf_file, output_directory):
         images = pdf2image.convert_from_path(pdf_file)
         if not output_directory:
             output_directory = os.path.join(os.path.dirname(pdf_file), os.path.splitext(os.path.basename(pdf_file))[0])
-        
+
         try:
             os.makedirs(output_directory, exist_ok=True)
         except PermissionError:
@@ -105,7 +105,7 @@ def pdf_to_images(pdf_file, output_directory):
         output_format = "jpeg" if not args.image_format else args.image_format.lower()
 
         for i, image in enumerate(images):
-            image.save(f"{output_directory}/Page_{i+1}.{output_format}", output_format)
+            image.save(f"{output_directory}/Page_{i + 1}.{output_format}", output_format)
         print(f"Done.\n")
     except FileNotFoundError:
         print(f"{pdf_file} was not found.")
@@ -132,7 +132,7 @@ Image.MAX_IMAGE_PIXELS = None  # Remove size limit while extracting PDF files
 supported_img_formats = ["jpeg", "png", "webp", "tiff", "bmp", "ico", "icns", "pbm", "pgm", "ppm"]
 
 if len(argv) == 1 or args.help:
-    usage() # Print usage if no options provided or -h/--help provided
+    usage()  # Print usage if no options provided or -h/--help provided
 
 if args.list_formats:
     print(f"\nSupported image formats for converting to pdf:")
@@ -144,7 +144,7 @@ if args.list_formats:
 if not args.image_files and not args.pdf_files:
     print(f"\nNo input file provided.\nTry 'python3 img-pdf-convert -h' for more info.\n")
     exit()
-    
+
 if args.image_files and not args.pdf_files:
     if not args.output_file:
         print(f"\nNo output file provided.\nTry 'python3 img-pdf-convert -h' for more info.\n")

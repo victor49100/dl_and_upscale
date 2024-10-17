@@ -1,27 +1,29 @@
 #!/bin/bash
 
-# Détecter le chemin du répertoire du script
 URL=$(cat url.txt)
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "Script exécuté à : $(date)"
 
-# Fonction de nettoyage
+#Fucntion that cleanup the environement
 cleanup() {
-    echo "Nettoyage des répertoires temporaires..."
+    echo "cleanup temporary files..."
     rm -rf "$BASE_DIR/inOP$CHAPTER_NUMBER" "$BASE_DIR/outOP$CHAPTER_NUMBER"
-    echo "Nettoyage terminé."
+    echo "cleanup done !"
 }
 
-# Définir le piège pour les signaux INT (Ctrl+C) et TERM (kill)
+#in the case if the script is canceled
 trap cleanup INT TERM
 
-# Vérifiez si les arguments sont fournis
+#if the user no enter parameter
 if [ "$#" -lt 2 ]; then
-    echo "Usage: $0 <chapter_number> <scale_factor>"
+    echo "Usage: $0 <chapter_number> <scale_factor(2 to 4)>"
     exit 1
 fi
+
+#enter inside the venv
 source OpVenv/bin/activate
+
 CHAPTER_NUMBER=$1
 SCALE_FACTOR=$2
 
@@ -34,36 +36,38 @@ cd "$BASE_DIR/inOP$CHAPTER_NUMBER"
 
 echo "Downloading ..."
 
-# Télécharger et extraire
+#here you need to adapt the code depending of your url
+# -O mean output name of the downloaded archive
 wget "$URL$CHAPTER_NUMBER" -O "OP$CHAPTER_NUMBER" --max-threads --waitretry
+
+#unzip the archive
 unzip -x "OP$CHAPTER_NUMBER" && rm "OP$CHAPTER_NUMBER"
 
 sleep 1
-
-# Revenir au répertoire précédent
 cd "$BASE_DIR"
 
-# Créer le répertoire de sortie
 mkdir -p "$BASE_DIR/outOP$CHAPTER_NUMBER"
 
-# Upscale
+#upscale images
 "$BASE_DIR/realesrgan-ncnn-vulkan" -i "$BASE_DIR/inOP$CHAPTER_NUMBER/" -o "$BASE_DIR/outOP$CHAPTER_NUMBER" -n realesr-animevideov3 -s $SCALE_FACTOR -f png -t -v
 
-echo " upscale ended..."
-sleep 2
+echo "upscale ended..."
 
-# Supprimer le répertoire d'entrée
+sleep 2
+clear >$(tty)
+
 rm -r "$BASE_DIR/inOP$CHAPTER_NUMBER"
 
 echo "merging ..."
-
-# Conversion des images en PDF
+#convert upscaled images into one PDF
 python "$BASE_DIR/img-pdf-convert" -i "$BASE_DIR/outOP$CHAPTER_NUMBER/*.png" -o "$BASE_DIR/outOP$CHAPTER_NUMBER/OP$CHAPTER_NUMBER.pdf"
 
 mv "$BASE_DIR/outOP$CHAPTER_NUMBER/OP$CHAPTER_NUMBER.pdf" "$BASE_DIR" && rm -r "$BASE_DIR/outOP$CHAPTER_NUMBER"
 
 echo "cleanup ..."
-# Nettoyage final au cas où
+
 cleanup
 
-echo "Script terminé à : $(date)"
+echo "runtime : $runtime"
+
+echo "end : $(date)"
