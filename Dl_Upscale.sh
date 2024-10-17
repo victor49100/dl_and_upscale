@@ -48,7 +48,7 @@ if [[ "$URL" =~ ^https?:// ]]; then
 elif [ -f "$URL" ]; then
     echo "Utilisation de l'archive locale : $URL"
     cp "$URL" "chapter$CHAPTER_NUMBER.zip"
-elseOP
+else
     echo "Le contenu de url.txt n'est ni un lien valide ni un fichier d'archive local existant."
     exit 1
 fi
@@ -86,7 +86,7 @@ ls "$BASE_DIR/outChapter$CHAPTER_NUMBER"
 echo "Upscaling terminé..."
 
 sleep 1
-# Nettoyage de l'écrancle
+# Nettoyage de l'écran
 clear >$(tty)
 
 rm -r "$BASE_DIR/inChapter$CHAPTER_NUMBER"
