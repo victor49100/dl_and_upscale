@@ -1,0 +1,4 @@
+argparse
+glob2
+Pillow
+pdf2image
