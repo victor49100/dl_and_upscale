@@ -1,28 +1,12 @@
 #!/usr/bin/env python3
 
-# Copyright (C) 2023-present StellarSand
-
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-
 import argparse
 import glob
 import os
+import re
 from sys import argv
 from PIL import Image, UnidentifiedImageError
 from pdf2image import pdf2image
-
 
 def usage():
     print('''
@@ -45,17 +29,8 @@ Options:
     -p, --pdf-files         Path to the PDF files
     -d, --directory         Output directory for extracted images (optional)
     -if, --image-format     Output format for extracted images (optional, default: jpeg)
-
-Examples:
-python3 img-pdf-convert -i icon.png -o icon.pdf
-python3 img-pdf-convert -i *.png *.jpg -o icon.pdf
-python3 img-pdf-convert -i icon1.png icon2.jpg -o /home/user/Downloads/new_icon.pdf
-python3 img-pdf-convert -p document.pdf
-python3 img-pdf-convert -p *.pdf
-python3 img-pdf-convert -p document1.pdf document2.pdf -d /home/user/Downloads -if png
     ''')
     exit()
-
 
 def get_matching_files(patterns):
     matched_files = []
@@ -63,6 +38,10 @@ def get_matching_files(patterns):
         matched_files.extend(glob.glob(pattern))
     return matched_files
 
+def numerical_sort(value):
+    # Function to sort filenames with numbers in the correct order
+    parts = re.split(r'(\d+)', value)
+    return [int(text) if text.isdigit() else text.lower() for text in parts]
 
 def is_valid_image_file(input_file):
     try:
@@ -81,14 +60,14 @@ def is_valid_image_file(input_file):
         print(f"Error: {e}\n")
         exit()
 
-
 def images_to_pdf(input_files, output_file):
+    # Sort files numerically before processing
+    input_files = sorted(input_files, key=numerical_sort)
     images = [Image.open(input_file) for input_file in input_files]
     pdf = images[0].convert("RGB")
     all_images = [image.convert("RGB") for image in images[1:]]
     pdf.save(output_file, save_all=True, append_images=all_images)
     print(f"[+] Generated {output_file} successfully.\n")
-
 
 def pdf_to_images(pdf_file, output_directory):
     try:
@@ -113,10 +92,9 @@ def pdf_to_images(pdf_file, output_directory):
     except PermissionError:
         print(f"Permission denied while accessing {pdf_file}.")
         exit()
-    except e:
-        print(f"{pdf_file} is not a valid PDF file.")
+    except Exception as e:
+        print(f"Error processing {pdf_file}: {e}")
         exit()
-
 
 arg_parser = argparse.ArgumentParser(add_help=False, usage="python3 img-pdf-convert -i <input files> -o <output file>")
 arg_parser.add_argument("-h", "--help", action="store_true")
@@ -132,7 +110,7 @@ Image.MAX_IMAGE_PIXELS = None  # Remove size limit while extracting PDF files
 supported_img_formats = ["jpeg", "png", "webp", "tiff", "bmp", "ico", "icns", "pbm", "pgm", "ppm"]
 
 if len(argv) == 1 or args.help:
-    usage()  # Print usage if no options provided or -h/--help provided
+    usage()
 
 if args.list_formats:
     print(f"\nSupported image formats for converting to pdf:")
